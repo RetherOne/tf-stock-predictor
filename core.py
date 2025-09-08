@@ -2,9 +2,12 @@ import os
 
 import numpy as np
 import pandas as pd
-import tensorflow as tf
 import yfinance as yf
 from sklearn.preprocessing import MinMaxScaler
+
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+import tensorflow as tf
 
 MODEL_FILENAME = "lstm_aapl_model.keras"
 SEQUENCE_LENGTH = 20  # number of previous candles to use for prediction
@@ -95,7 +98,7 @@ data_10m = (
     .dropna()
 )
 
-print("Validate result:", validate_data(data_10m))
+print(f"Validate csv data:{'OK' if validate_data(data_10m) else 'BAD'}")
 
 
 def validate_scaled_data(scaled_data):
@@ -129,9 +132,11 @@ def scale_ohlcv(data):
 
     scaler_prices = MinMaxScaler(feature_range=(0, 1))
     scaler_volume = MinMaxScaler(feature_range=(0, 1))
+    scaler_close = MinMaxScaler(feature_range=(0, 1))
 
     prices_scaled = scaler_prices.fit_transform(prices)
     volume_scaled = scaler_volume.fit_transform(np.log1p(volume))
+    scaler_close.fit_transform(prices[["Close"]])
 
     scaled_df = pd.DataFrame(
         np.hstack([prices_scaled, volume_scaled]),
@@ -139,14 +144,13 @@ def scale_ohlcv(data):
         index=data.index,
     )
 
-    return scaled_df
+    return scaled_df, scaler_close
 
 
-scaled_data = scale_ohlcv(data_10m)
+scaled_data, scaler_close = scale_ohlcv(data_10m)
 print(
     f"Validate scaled data result: {'OK' if validate_scaled_data(scaled_data) else 'BAD'}"
 )
-print(scaled_data.head())
 
 
 def create_sequences(data, seq_length=20):
@@ -242,3 +246,12 @@ predicted_next_close = model.predict(last_sequence)
 print(
     f"Predicted next closing price (scaled 0-1): {predicted_next_close[0][0]}"
 )
+
+
+predicted_next_close = model.predict(last_sequence)
+scaled_pred = predicted_next_close[0][0]
+
+real_pred = scaler_close.inverse_transform([[scaled_pred]])[0][0]
+predicted_time = data_10m.index[-1] + pd.Timedelta(minutes=15)
+
+print(f"Prediction for {predicted_time} in USD: {real_pred:.2f}")
