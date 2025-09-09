@@ -37,7 +37,7 @@ cd tf-stock-predictor
 2. **Run the main script**
 
 ```bash
-python core.py
+python main.py
 ```
 
 - The script will **download historical data** (if CSV does not exist), preprocess it, create sequences, and either load an existing model or train a new one.  
