@@ -46,4 +46,4 @@ python main.py
 3. **Output**
 
 - The script prints the **predicted next closing price** (scaled 0–1).  
-- The trained model is saved as `lstm_aapl_model.h5` or `.keras` (if using the new format).  
+- The trained model is saved as `lstm_aapl_model.keras`.  
