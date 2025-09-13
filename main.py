@@ -7,9 +7,7 @@ import pandas as pd
 import tensorflow as tf
 
 from config import (
-    DEFAULT_INTERVAL,
-    DEFAULT_PERIOD,
-    DEFAULT_TICKER,
+    CSV_FILENAME,
     FEATURES,
     MODEL_FILENAME,
     SEQUENCE_LENGTH,
@@ -20,9 +18,7 @@ from data.validators import validate_data, validate_scaled_data
 from model.lstm import build_lstm_model
 
 # 1. Load data
-raw_data = load_data(
-    DEFAULT_TICKER, DEFAULT_INTERVAL, DEFAULT_PERIOD, force_download=True
-)
+raw_data = load_data(filename=CSV_FILENAME, force_download=True)
 data_10m = resample_to_10m(raw_data)
 validate_data(data_10m)
 
