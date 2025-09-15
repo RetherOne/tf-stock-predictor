@@ -60,7 +60,7 @@ def load_data(
         raise RuntimeError(f"Failed to download data for {ticker}: {e}")
 
 
-def resample_to_10m(data: pd.DataFrame) -> None:
+def resample_to_10m(data: pd.DataFrame) -> pd.DataFrame:
     return (
         data.resample("10min")
         .agg(
@@ -74,3 +74,46 @@ def resample_to_10m(data: pd.DataFrame) -> None:
         )
         .dropna()
     )
+
+
+def csv_transform(filename: str, resample_10min: bool = True) -> None:
+    """
+    Load OHLCV stock data from CSV, filter from 2018 onwards,
+    optionally resample to 10-minute candles, and save to a new CSV.
+
+    Parameters:
+    -----------
+    filename : str
+        Path to the input CSV file with 'Datetime' and OHLCV columns.
+    resample_10min : bool, default=True
+        If True, resample to 10-minute candles; otherwise keep original frequency.
+
+    Returns:
+    --------
+    None
+        Saves processed data to CSV.
+    """
+    print(f"Loading data from {filename}...")
+    data = pd.read_csv(filename, parse_dates=["Datetime"])
+
+    print("Filtering data from 2018-01-01 and selecting columns...")
+    filtered = data.loc[
+        data["Datetime"] >= "2018-01-01",
+        ["Datetime", "Open", "High", "Low", "Close", "Volume"],
+    ]
+    print(f"Filtering done. Rows after filter: {len(filtered)}")
+
+    if resample_10min:
+        print("Resampling data to 10-minute candles...")
+        filtered.set_index("Datetime", inplace=True)
+
+        filtered = resample_to_10m(filtered)
+
+        filtered = filtered.reset_index()
+        print("Resampling done.")
+
+        filtered.to_csv("AAPL_10min_2018_2024.csv", index=False)
+        print("10-minute data saved to AAPL_2018_2024_10min.csv")
+    else:
+        filtered.to_csv("AAPL_2018_2024_1min.csv", index=False)
+        print("1-minute data saved to AAPL_2018_2024_1min.csv")
