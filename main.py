@@ -1,13 +1,13 @@
 import os
 
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
-
 import pandas as pd
 import tensorflow as tf
 
 from config import (
-    CSV_FILENAME,
+    # CSV_FILENAME,  # For training, uncomment this line.
+    DEFAULT_INTERVAL,
+    DEFAULT_PERIOD,
+    DEFAULT_TICKER,
     FEATURES,
     MODEL_FILENAME,
     SEQUENCE_LENGTH,
@@ -17,9 +17,20 @@ from data.preprocess import create_sequences, scale_ohlcv, train_val_test_split
 from data.validators import validate_data, validate_scaled_data
 from model.lstm import build_lstm_model
 
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+
+
 # 1. Load data
-raw_data = load_data(filename=CSV_FILENAME, force_download=True)
+raw_data = load_data(
+    DEFAULT_TICKER,
+    DEFAULT_INTERVAL,
+    DEFAULT_PERIOD,
+    force_download=True,  # For training, comment lines(25-30 inclusive).
+)
 data_10m = resample_to_10m(raw_data)
+
+# data_10m = load_data(filename=CSV_FILENAME)  # For training, uncomment this line.
 validate_data(data_10m)
 
 # 2. Preprocess
@@ -40,7 +51,7 @@ else:
         X_train,
         y_train,
         validation_data=(X_val, y_val),
-        epochs=100,
+        epochs=50,
         batch_size=32,
         callbacks=[
             tf.keras.callbacks.EarlyStopping(

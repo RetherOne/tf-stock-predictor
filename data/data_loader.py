@@ -112,7 +112,7 @@ def csv_transform(filename: str, resample_10min: bool = True) -> None:
         filtered = filtered.reset_index()
         print("Resampling done.")
 
-        filtered.to_csv("AAPL_2018_2024_10min.csv", index=False)
+        filtered.to_csv("AAPL_10min_2018_2024.csv", index=False)
         print("10-minute data saved to AAPL_2018_2024_10min.csv")
     else:
         filtered.to_csv("AAPL_2018_2024_1min.csv", index=False)
